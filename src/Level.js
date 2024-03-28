@@ -1,8 +1,11 @@
 import * as THREE from "three";
-import { RigidBody } from "@react-three/rapier";
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useState } from "react";
+import { useAnimations, useGLTF } from "@react-three/drei";
+import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 
 function floorMaterialGenerator(color = "limegreen") {
@@ -27,8 +30,21 @@ function BlockStart({ position = [0, 0, 0], material = {} }) {
   );
 }
 function BlockEnd({ position = [0, 0, 0], material = {} }) {
+  const group = useRef();
+  const modelRef = useRef();
+
+  const { scene, animations } = useGLTF("/models/man.gltf");
+  const { names, actions } = useAnimations(animations, group);
+  useEffect(() => {
+    scene.children.forEach((item) => {
+      item.castShadow = true;
+    });
+  }, []);
+  useEffect(() => {
+    actions[names[1]].reset().fadeIn(0.5).play();
+  }, [names]);
   return (
-    <group position={position}>
+    <group receiveShadow dispose={null} ref={modelRef} position={position}>
       <mesh
         receiveShadow
         geometry={boxGeometry}
@@ -36,6 +52,9 @@ function BlockEnd({ position = [0, 0, 0], material = {} }) {
         scale={[4, 0.2, 4]}
         position={[0, -0.1, 0]}
       />
+      <RigidBody type="fixed" colliders="hull" restitution={0.2} friction={0}>
+        <primitive ref={group} object={scene} scale={3} />
+      </RigidBody>
     </group>
   );
 }
@@ -98,6 +117,43 @@ function BlockSpinner({
   );
 }
 
+function Walls({ length = 1 }) {
+  return (
+    <>
+      <RigidBody type="fixed" restitution={0.2} friction={0}>
+        <mesh
+          position={[2.15, 0.75, -10]}
+          geometry={boxGeometry}
+          material={floorMaterialGenerator("red")}
+          scale={[0.3, 1.5, 32]}
+          castShadow
+        />
+
+        <mesh
+          position={[-2.15, 0.75, -10]}
+          geometry={boxGeometry}
+          material={floorMaterialGenerator("red")}
+          scale={[0.3, 1.5, 32]}
+          receiveShadow
+        />
+
+        <mesh
+          position={[0, 0.75, -26]}
+          geometry={boxGeometry}
+          material={floorMaterialGenerator("red")}
+          scale={[4, 1.5, 0.3]}
+          receiveShadow
+        />
+        <CuboidCollider
+          args={[2, 0.1, 16]}
+          position={[0, -0.1, -10]}
+          restitution={0.2}
+          friction={1}
+        />
+      </RigidBody>
+    </>
+  );
+}
 export default function () {
   return (
     <>
@@ -122,10 +178,32 @@ export default function () {
         scale={[1.5, 1.5, 0.3]}
         animateType="position-x"
       />
-      <BlockEnd
+      <BlockSpinner
+        material={floorMaterialGenerator("blue")}
         position={[0, 0, -12]}
+        scale={[3.5, 0.3, 0.3]}
+        animateType="rotation"
+      />
+
+      <BlockSpinner
+        material={floorMaterialGenerator("blue")}
+        position={[0, 0, -16]}
+        scale={[1.5, 1.5, 0.3]}
+        animateType="position-x"
+      />
+
+      <BlockSpinner
+        material={floorMaterialGenerator("blue")}
+        position={[0, 0, -20]}
+        scale={[1.5, 0.2, 0.3]}
+        animateType="position-y"
+      />
+      <BlockEnd
+        position={[0, 0, -24]}
         material={floorMaterialGenerator("limegreen")}
       />
+
+      <Walls />
     </>
   );
 }

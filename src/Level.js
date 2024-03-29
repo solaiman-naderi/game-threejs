@@ -75,13 +75,17 @@ function BlockSpinner({
     if (animateType == "rotation") {
       const rotation = new THREE.Quaternion();
       rotation.setFromEuler(new THREE.Euler(0, time * speed, 0));
-      obstacle.current.setNextKinematicRotation(rotation);
+      obstacle.current?.setNextKinematicRotation(rotation);
     } else if (animateType == "position-y") {
       const y = Math.sin(time) + 1.15;
-      obstacle.current.setNextKinematicTranslation({ x: 0, y, z: position[2] });
+      obstacle.current?.setNextKinematicTranslation({
+        x: 0,
+        y,
+        z: position[2],
+      });
     } else if (animateType == "position-x") {
       const x = Math.sin(time);
-      obstacle.current.setNextKinematicTranslation({
+      obstacle.current?.setNextKinematicTranslation({
         x,
         y: 0.9,
         z: position[2],
